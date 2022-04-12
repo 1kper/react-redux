@@ -1,24 +1,27 @@
-import React from 'react'
-
-import { availableColors, capitalize } from '../filters/colors'
-import { StatusFilters } from '../filters/filtersSlice'
+import React from "react";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
+import { availableColors, capitalize } from "../filters/colors";
+import { StatusFilters } from "../filters/filtersSlice";
 
 const RemainingTodos = ({ count }) => {
-  const suffix = count === 1 ? '' : 's'
+  const suffix = count === 1 ? "" : "s";
 
   return (
     <div className="todo-count">
       <h5>Remaining Todos</h5>
       <strong>{count}</strong> item{suffix} left
     </div>
-  )
-}
+  );
+};
 
 const StatusFilter = ({ value: status, onChange }) => {
+  console.log();
   const renderedFilters = Object.keys(StatusFilters).map((key) => {
-    const value = StatusFilters[key]
-    const handleClick = () => onChange(value)
-    const className = value === status ? 'selected' : ''
+    const value = StatusFilters[key];
+    const handleClick = () => onChange(value);
+    const className = value === status ? "selected" : "";
 
     return (
       <li key={value}>
@@ -26,24 +29,25 @@ const StatusFilter = ({ value: status, onChange }) => {
           {key}
         </button>
       </li>
-    )
-  })
+    );
+  });
 
   return (
     <div className="filters statusFilters">
       <h5>Filter by Status</h5>
       <ul>{renderedFilters}</ul>
     </div>
-  )
-}
+  );
+};
 
 const ColorFilters = ({ value: colors, onChange }) => {
   const renderedColors = availableColors.map((color) => {
-    const checked = colors.includes(color)
+    const checked = colors.includes(color);
     const handleChange = () => {
-      const changeType = checked ? 'removed' : 'added'
-      onChange(color, changeType)
-    }
+      const changeType = checked ? "removed" : "added";
+
+      onChange(color, changeType);
+    };
 
     return (
       <label key={color}>
@@ -56,31 +60,64 @@ const ColorFilters = ({ value: colors, onChange }) => {
         <span
           className="color-block"
           style={{
-            backgroundColor: color,
+            backgroundColor: color
           }}
         ></span>
         {capitalize(color)}
       </label>
-    )
-  })
+    );
+  });
 
   return (
     <div className="filters colorFilters">
       <h5>Filter by Color</h5>
       <form className="colorSelection">{renderedColors}</form>
     </div>
-  )
-}
+  );
+};
 
 const Footer = () => {
-  const colors = []
-  const status = StatusFilters.All
-  const todosRemaining = 1
+  const dispatch = useDispatch();
+  const [colors, setColors] = useState([]);
+  const [status, setStatus] = useState(StatusFilters.All);
+  // const [,setTodosRemaining]=useState(0)
+  // const status = StatusFilters.All
+  var selectTodos = useSelector((state) => state.todos);
+  var todosRemaining = 0;
+  selectTodos.forEach((todo) => {
+    if (!todo.completed) {
+      todosRemaining++;
+    }
+  });
 
-  const onColorChange = (color, changeType) =>
-    console.log('Color change: ', { color, changeType })
-  const onStatusChange = (status) => console.log('Status change: ', status)
+  const onColorChange = (color, changeType) => {
+    if (colors.includes(color)) {
+      var filtered = colors.filter(function (value, index, arr) {
+        return value !== color;
+      });
+      setColors([...filtered]);
+    } else {
+      setColors([...colors, color]);
+    }
 
+    //   var newColor=colors.filter((colo)=>{return colo!==color })
+    //   console.log(newColor)
+    //   if(colors.indexOf(color)){setColors([ ...newColor])
+    //    newColor=[]}
+    //  else{ setColors([ ...colors,color])}
+
+    console.log("Color change: ", { color, changeType });
+
+    dispatch({
+      type: "filters/colorFilterChanged",
+      payload: { color: color, changeType: changeType }
+    });
+  };
+
+  const onStatusChange = (status) => {
+    setStatus(status);
+    dispatch({ type: "filters/statusFilterChanged", payload: status });
+  };
   return (
     <footer className="footer">
       <div className="actions">
@@ -93,7 +130,7 @@ const Footer = () => {
       <StatusFilter value={status} onChange={onStatusChange} />
       <ColorFilters value={colors} onChange={onColorChange} />
     </footer>
-  )
-}
+  );
+};
 
-export default Footer
+export default Footer;
